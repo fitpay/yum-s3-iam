@@ -78,10 +78,10 @@ def parse_url(url):
     if m:
         return (m.group(2), m.group(3), m.group(4))
 
-    # http[s]://<bucket>.s3.<aws-region>.amazonaws.com
-    # m = re.match(r'(http|https|s3)://([a-z0-9][a-z0-9-.]{1,61}[a-z0-9])[.]s3[.]([a-z0-9-]+)[.]amazonaws[.]com(.*)$', url)
-    # if m:
-    #     return (m.group(2), m.group(3), m.group(4))
+    #http[s]://<bucket>.s3.<aws-region>.amazonaws.com
+    m = re.match(r'(http|https|s3)://([a-z0-9][a-z0-9-.]{1,61}[a-z0-9])[.]s3[.]([a-z0-9-]+)[.]amazonaws[.]com(.*)$', url)
+    if m and 'cn' not in m.group(3):
+        return (m.group(2), m.group(3), m.group(4))
 
     # http[s]://s3.amazonaws.com/<bucket>
     m = re.match(r'(http|https|s3)://s3[.]amazonaws[.]com/([a-z0-9][a-z0-9-.]{1,61}[a-z0-9])(.*)$', url)
@@ -148,8 +148,10 @@ class S3Repository(YumRepository):
                 self.baseurl = "https://s3.cn-north-1.amazonaws.com.cn/%s%s" % (bucket, path)
             elif 'cn-northwest-1' in region:
                 self.baseurl = "https://%s.s3.cn-northwest-1.amazonaws.com.cn%s" % (bucket, path)
-        else:
+        elif region == None:
             self.baseurl = "https://%s.s3.amazonaws.com%s" % (bucket, path)
+        else:
+            self.baseurl = "https://%s.s3.%s.amazonaws.com%s" % (bucket, region, path)
 
         self.name = repo.name
         self.region = repo.region if repo.region else region
