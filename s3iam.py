@@ -78,7 +78,7 @@ def parse_url(url):
     if m:
         return (m.group(2), m.group(3), m.group(4))
 
-    #http[s]://<bucket>.s3.<aws-region>.amazonaws.com
+    # http[s]://<bucket>.s3.<aws-region>.amazonaws.com
     m = re.match(r'(http|https|s3)://([a-z0-9][a-z0-9-.]{1,61}[a-z0-9])[.]s3[.]([a-z0-9-]+)[.]amazonaws[.]com(.*)$', url)
     if m and 'cn' not in m.group(3):
         return (m.group(2), m.group(3), m.group(4))
