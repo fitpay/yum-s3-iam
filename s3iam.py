@@ -103,6 +103,11 @@ def parse_url(url):
     if m:
         return (m.group(3), m.group(2), m.group(4))
 
+    # http[s]://<bucket_with_domain>/<path> # to handle fitpay domain cases
+    m = re.match(r'(http|https|s3)://([a-z0-9-.]+)[/](.*)$', url)
+    if m:
+        return (m.group(2), None, m.group(3))    
+
     return (None, None, None)
 
 
@@ -148,8 +153,8 @@ class S3Repository(YumRepository):
                 self.baseurl = "https://s3.cn-north-1.amazonaws.com.cn/%s%s" % (bucket, path)
             elif 'cn-northwest-1' in region:
                 self.baseurl = "https://%s.s3.cn-northwest-1.amazonaws.com.cn%s" % (bucket, path)
-        elif region == None:
-            self.baseurl = "https://%s.s3.amazonaws.com%s" % (bucket, path)
+        elif '.' in bucket:
+            baseurl = "https://%s/%s" % (bucket, path)
         else:
             self.baseurl = "https://%s.s3.%s.amazonaws.com%s" % (bucket, region, path)
 
