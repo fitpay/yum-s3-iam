@@ -147,16 +147,16 @@ class S3Repository(YumRepository):
             msg = "s3iam: unable to parse url %s'" % repo.baseurl
             raise yum.plugins.PluginYumExit(msg)
 
-        if region and region != 'us-east-1':
+        if '.' in bucket:
+            self.baseurl = "https://%s%s" % (bucket, path)
+        elif region and region != 'us-east-1':
             self.baseurl = "https://s3-%s.amazonaws.com/%s%s" % (region, bucket, path)
-            if '.' in bucket:
-                self.baseurl = "https://%s%s" % (bucket, path)
-            elif 'cn-northwest-1' in region:
+            if 'cn-northwest-1' in region:
                 self.baseurl = "https://%s.s3.cn-northwest-1.amazonaws.com.cn%s" % (bucket, path)
             elif 'cn-north-1' in region:
                 self.baseurl = "https://s3.cn-north-1.amazonaws.com.cn/%s%s" % (bucket, path)
-        elif '.' in bucket:
-            self.baseurl = "https://%s%s" % (bucket, path)
+        elif region == None:
+            self.baseural = "https://%s.s3.amazonaws.com%s" % (bucket, path)
         else:
             self.baseurl = "https://%s.s3.%s.amazonaws.com%s" % (bucket, region, path)
 
