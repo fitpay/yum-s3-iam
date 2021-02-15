@@ -80,7 +80,7 @@ def parse_url(url):
 
     # http[s]://<bucket>.s3.<aws-region>.amazonaws.com
     m = re.match(r'(http|https|s3)://([a-z0-9][a-z0-9-.]{1,61}[a-z0-9])[.]s3[.]([a-z0-9-]+)[.]amazonaws[.]com(.*)$', url)
-    if m:
+    if m and 'cn' not in m.group(3):
         return (m.group(2), m.group(3), m.group(4))
 
     # http[s]://s3.amazonaws.com/<bucket>
@@ -102,6 +102,11 @@ def parse_url(url):
     m = re.match(r'(http|https|s3)://s3-([a-z0-9-]+)[.]amazonaws[.]com/([a-z0-9][a-z0-9-.]{1,61}[a-z0-9])(.*)$', url)
     if m:
         return (m.group(3), m.group(2), m.group(4))
+
+    # http[s]://<bucket_with_domain>/<path> # to handle fitpay domain cases
+    m = re.match(r'(http|https|s3)://([a-z0-9-.]+)/(.*)$', url)
+    if m:
+        return (m.group(2), None, m.group(3))    
 
     return (None, None, None)
 
@@ -142,12 +147,16 @@ class S3Repository(YumRepository):
             msg = "s3iam: unable to parse url %s'" % repo.baseurl
             raise yum.plugins.PluginYumExit(msg)
 
-        if region and region != 'us-east-1':
+        if '.' in bucket:
+            self.baseurl = "https://%s%s" % (bucket, path)
+        elif region and region != 'us-east-1':
             self.baseurl = "https://s3-%s.amazonaws.com/%s%s" % (region, bucket, path)
-            if 'cn-north-1' in region:
-                self.baseurl = "https://s3.cn-north-1.amazonaws.com.cn/%s%s" % (bucket, path)
-            elif 'cn-northwest-1' in region:
+            if 'cn-northwest-1' in region:
                 self.baseurl = "https://%s.s3.cn-northwest-1.amazonaws.com.cn%s" % (bucket, path)
+            elif 'cn-north-1' in region:
+                self.baseurl = "https://s3.cn-north-1.amazonaws.com.cn/%s%s" % (bucket, path)
+        elif region == None:
+            self.baseural = "https://%s.s3.amazonaws.com%s" % (bucket, path)
         else:
             self.baseurl = "https://%s.s3.%s.amazonaws.com%s" % (bucket, region, path)
 
